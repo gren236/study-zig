@@ -19,6 +19,6 @@ pub fn send400(conn: Connection) !void {
         ++ "Connection: Closed\n\n<html><body>"
         ++ "<h1>File not found!</h1></body></html>"
     );
-    
+
     _ = try conn.stream.write(message);
 }
