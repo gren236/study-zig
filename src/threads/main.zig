@@ -7,6 +7,16 @@ fn someWork(id: u8) void {
     std.debug.print("Finishing some work on thread {d}\n", .{id});
 }
 
+var counter: usize = 0;
+
+fn globalIncrement(mutex: *std.Thread.Mutex) void {
+    for (0..10000) |_| {
+        mutex.lock();
+        counter += 1;
+        mutex.unlock();
+    }
+}
+
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
     const allocator = gpa.allocator();
@@ -17,6 +27,16 @@ pub fn main() !void {
     });
     defer pool.deinit();
 
-    try pool.spawn(someWork, .{1});
-    try pool.spawn(someWork, .{2});
+    // try pool.spawn(someWork, .{1});
+    // try pool.spawn(someWork, .{2});
+
+    var wg: std.Thread.WaitGroup = .{};
+    var mutex: std.Thread.Mutex = .{};
+
+    pool.spawnWg(&wg, globalIncrement, .{&mutex});
+    pool.spawnWg(&wg, globalIncrement, .{&mutex});
+
+    wg.wait();
+
+    std.debug.print("counter is {d}", .{counter});
 }
